@@ -32,8 +32,10 @@ export async function POST(request: Request) {
   const { data, error } = await supabase
     .from('emergency_alerts')
     .insert([{ dog_id, alert_message, alert_date, resolved }])
+    .select()
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (!data || data.length === 0) return NextResponse.json({ error: 'Failed to create emergency alert' }, { status: 500 })
   return NextResponse.json(data[0], { status: 201 })
 }
 
@@ -50,8 +52,10 @@ export async function PUT(request: Request) {
     .from('emergency_alerts')
     .update(updates)
     .eq('id', id)
+    .select()
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (!data || data.length === 0) return NextResponse.json({ error: 'Emergency alert not found' }, { status: 404 })
   return NextResponse.json(data[0], { status: 200 })
 }
 
@@ -68,7 +72,9 @@ export async function DELETE(request: Request) {
     .from('emergency_alerts')
     .delete()
     .eq('id', id)
+    .select()
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-  return NextResponse.json(data[0], { status: 200 })
+  if (!data || data.length === 0) return NextResponse.json({ error: 'Emergency alert not found' }, { status: 404 })
+  return NextResponse.json({ message: 'Emergency alert deleted successfully' }, { status: 200 })
 }

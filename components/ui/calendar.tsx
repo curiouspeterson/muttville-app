@@ -9,6 +9,15 @@ import { buttonVariants } from "@/components/ui/button"
 
 export type CalendarProps = React.ComponentProps<typeof DayPicker>
 
+// --- Updated Event Interface ---
+export interface Event {
+  title: string;
+  start: Date;
+  end: Date;
+  color?: string; // Optional color for different event types
+}
+// --- End of Updated Event Interface ---
+
 function Calendar({
   className,
   classNames,

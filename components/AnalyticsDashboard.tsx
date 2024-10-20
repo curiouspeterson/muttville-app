@@ -1,25 +1,55 @@
-// Import the Bar component from react-chartjs-2 for creating bar charts
+'use client'
+
+import { useEffect, useState } from 'react'
+import { supabase } from '@/lib/supabase'
 import { Bar } from 'react-chartjs-2'
+import { ChartData } from 'chart.js';
 
-// Define the AnalyticsDashboard component
+interface Walk {
+  dog_id: string;
+  count: number; // Changed from string to number
+}
+
 export default function AnalyticsDashboard() {
-  // Define the data structure for the bar chart
-  const data = {
-    // X-axis labels representing different dogs
-    labels: ['Dog 1', 'Dog 2', 'Dog 3'],
-    datasets: [
-      {
-        // Dataset label
-        label: 'Walks',
-        // Y-axis data representing the number of walks for each dog
-        data: [12, 19, 3],
-        // Color of the bars in the chart
-        backgroundColor: 'rgba(75,192,192,0.6)',
-      },
-    ],
-  }
+  const [data, setData] = useState<ChartData<'bar', number[], string> | null>(null)
 
-  // Render the Bar component with the defined data
-  // This will create a bar chart visualizing the number of walks for each dog
+  useEffect(() => {
+    const fetchData = async () => {
+      const { data: walks, error } = await supabase
+        .from('activities')
+        .select('dog_id, count(*)', { count: 'exact' })
+        .eq('activity_type', 'Walk')
+
+      if (error) {
+        console.error('Error fetching walks:', error)
+        return
+      }
+
+      // Correctly map count to number
+      const typedWalks = walks.map(w => ({
+        dog_id: w.dog_id as string,
+        count: Array.isArray(w.count) ? w.count.length : Number(w.count),
+      }))
+
+      const labels = typedWalks.map(w => w.dog_id)
+      const walkData = typedWalks.map(w => w.count) // No need for parseInt now
+
+      setData({
+        labels,
+        datasets: [
+          {
+            label: 'Walks',
+            data: walkData,
+            backgroundColor: 'rgba(75,192,192,0.6)',
+          },
+        ],
+      })
+    }
+
+    fetchData()
+  }, [])
+
+  if (!data) return <div>Loading...</div>
+
   return <Bar data={data} />
 }

@@ -1,5 +1,6 @@
 'use client'
 
+// Import necessary dependencies and components
 import { useState } from 'react'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { useRouter } from 'next/navigation'
@@ -16,7 +17,9 @@ import {
 } from "@/components/ui/select"
 import { useToast } from "@/hooks/use-toast"
 
+// Define the main component for adding a new dog
 export default function AddDogForm() {
+  // Initialize state variables for form fields and loading state
   const [name, setName] = useState('')
   const [age, setAge] = useState('')
   const [breed, setBreed] = useState('')
@@ -25,16 +28,19 @@ export default function AddDogForm() {
   const [notes, setNotes] = useState('')
   const [isLoading, setIsLoading] = useState(false)
 
+  // Initialize router, Supabase client, and toast hook
   const router = useRouter()
   const supabase = createClientComponentClient()
   const { toast } = useToast()
 
+  // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
 
+    // Insert new dog data into Supabase
     const { error } = await supabase
-      .from('dogs')  // Change 'Dogs' to 'dogs'
+      .from('dogs')
       .insert([
         {
           name,
@@ -49,18 +55,20 @@ export default function AddDogForm() {
     setIsLoading(false)
 
     if (error) {
+      // Handle error case
       toast({
         title: "Error",
         description: "Failed to add dog. Please try again.",
         variant: "destructive",
       })
-      console.error("Error adding dog:", error)  // Add this line for debugging
+      console.error("Error adding dog:", error)
     } else {
+      // Handle success case
       toast({
         title: "Success",
         description: "Dog added successfully!",
       })
-      // Reset form
+      // Reset form fields
       setName('')
       setAge('')
       setBreed('')
@@ -71,10 +79,12 @@ export default function AddDogForm() {
     }
   }
 
+  // Render the form
   return (
     <form onSubmit={handleSubmit} className="space-y-6 max-w-md mx-auto p-6 bg-card rounded-lg shadow-lg">
       <h2 className="text-2xl font-bold text-center mb-6">Add New Dog</h2>
       
+      {/* Name input field */}
       <div className="space-y-2">
         <Label htmlFor="name">Name</Label>
         <Input
@@ -85,6 +95,7 @@ export default function AddDogForm() {
         />
       </div>
 
+      {/* Age input field */}
       <div className="space-y-2">
         <Label htmlFor="age">Age</Label>
         <Input
@@ -96,6 +107,7 @@ export default function AddDogForm() {
         />
       </div>
 
+      {/* Breed input field */}
       <div className="space-y-2">
         <Label htmlFor="breed">Breed</Label>
         <Input
@@ -106,6 +118,7 @@ export default function AddDogForm() {
         />
       </div>
 
+      {/* Health Status input field */}
       <div className="space-y-2">
         <Label htmlFor="healthStatus">Health Status</Label>
         <Input
@@ -116,6 +129,7 @@ export default function AddDogForm() {
         />
       </div>
 
+      {/* Status select field */}
       <div className="space-y-2">
         <Label htmlFor="status">Status</Label>
         <Select onValueChange={setStatus} required>
@@ -130,6 +144,7 @@ export default function AddDogForm() {
         </Select>
       </div>
 
+      {/* Notes textarea field */}
       <div className="space-y-2">
         <Label htmlFor="notes">Notes</Label>
         <Textarea
@@ -139,6 +154,7 @@ export default function AddDogForm() {
         />
       </div>
 
+      {/* Submit button */}
       <Button type="submit" className="w-full" disabled={isLoading}>
         {isLoading ? 'Adding...' : 'Add Dog'}
       </Button>

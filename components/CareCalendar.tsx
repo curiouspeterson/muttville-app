@@ -1,3 +1,5 @@
+'use client'
+
 // Import necessary dependencies for the calendar component
 import { Calendar, momentLocalizer } from 'react-big-calendar'
 import moment from 'moment'

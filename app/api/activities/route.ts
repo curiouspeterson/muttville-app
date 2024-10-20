@@ -1,26 +1,115 @@
 import { NextResponse } from 'next/server'
-
-// This file defines API route handlers for the /api/activities endpoint
+import { supabase } from '@/lib/supabase'
 
 /**
- * GET handler for retrieving activities
- * @returns {NextResponse} JSON response with a placeholder message
+ * GET Activities by Dog ID
+ * Retrieves all activities for a specific dog, ordered by creation date.
  */
-export async function GET() {
-  // TODO: Implement actual logic to fetch and return activities
-  // This could involve querying a database, filtering results, etc.
-  return NextResponse.json({ message: 'GET activities endpoint' })
+export async function GET(request: Request) {
+  const url = new URL(request.url)
+  const dog_id = url.searchParams.get('dog_id')
+
+  // Validate that dog_id is provided
+  if (!dog_id) {
+    return NextResponse.json({ error: 'dog_id is required' }, { status: 400 })
+  }
+
+  // Query Supabase for activities
+  const { data, error } = await supabase
+    .from('activities')
+    .select('*')
+    .eq('dog_id', dog_id)
+    .order('created_at', { ascending: false })
+
+  // Handle potential errors
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  return NextResponse.json(data)
 }
 
 /**
- * POST handler for creating new activities
- * @returns {NextResponse} JSON response with a placeholder message
+ * POST Create a new Activity
+ * Adds a new activity record to the database.
  */
-export async function POST() {
-  // TODO: Implement actual logic to create a new activity
-  // This could involve validating input, saving to a database, etc.
-  return NextResponse.json({ message: 'POST activities endpoint' })
+export async function POST(request: Request) {
+  try {
+    const body = await request.json()
+    console.log('Received body:', body)
+
+    const { dog_id, walker_id, activity_type, notes, temperament_notes } = body
+
+    if (!dog_id || !walker_id || !activity_type) {
+      return NextResponse.json({ error: 'dog_id, walker_id, and activity_type are required' }, { status: 400 })
+    }
+
+    console.log('Inserting activity:', { dog_id, walker_id, activity_type, notes, temperament_notes })
+
+    const { data, error } = await supabase
+      .from('activities')
+      .insert([{ dog_id, walker_id, activity_type, notes, temperament_notes }])
+      .select()
+
+    if (error) {
+      console.error('Supabase error:', error)
+      return NextResponse.json({ error: `Supabase error: ${error.message}` }, { status: 500 })
+    }
+
+    if (!data || data.length === 0) {
+      return NextResponse.json({ error: 'No data returned after insertion' }, { status: 500 })
+    }
+
+    console.log('Inserted data:', data[0])
+
+    return NextResponse.json(data[0], { status: 201 })
+  } catch (error) {
+    console.error('Unexpected error:', error)
+    return NextResponse.json({ error: `An unexpected error occurred: ${error instanceof Error ? error.message : 'Unknown error'}` }, { status: 500 })
+  }
 }
 
-// Note: Additional HTTP methods (PUT, DELETE, etc.) can be added here
-// if needed for managing activities
+/**
+ * PUT Update an Activity
+ * Updates an existing activity record in the database.
+ */
+export async function PUT(request: Request) {
+  const body = await request.json()
+  const { id, ...updates } = body
+
+  // Validate that id is provided
+  if (!id) {
+    return NextResponse.json({ error: 'id is required for updating activity' }, { status: 400 })
+  }
+
+  // Update activity in Supabase
+  const { data, error } = await supabase
+    .from('activities')
+    .update(updates)
+    .eq('id', id)
+
+  // Handle potential errors and return the updated activity
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  return NextResponse.json(data?.[0] ?? null, { status: 200 })
+}
+
+/**
+ * DELETE an Activity
+ * Removes an activity record from the database.
+ */
+export async function DELETE(request: Request) {
+  const body = await request.json()
+  const { id } = body
+
+  // Validate that id is provided
+  if (!id) {
+    return NextResponse.json({ error: 'id is required for deleting activity' }, { status: 400 })
+  }
+
+  // Delete activity from Supabase
+  const { data, error } = await supabase
+    .from('activities')
+    .delete()
+    .eq('id', id)
+
+  // Handle potential errors and return the deleted activity
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  return NextResponse.json(data?.[0] ?? null, { status: 200 })
+}

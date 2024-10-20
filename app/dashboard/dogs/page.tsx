@@ -3,61 +3,62 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import Link from 'next/link'
-
-// Define the Dog type
-type Dog = {
-  id: string
-  name: string
-  breed: string
-}
+import Filter from '@/components/Filter'
+import { Dog } from '@/types/Dog'
 
 export default function DogsPage() {
   const [dogs, setDogs] = useState<Dog[]>([])
   const [newDog, setNewDog] = useState({ name: '', breed: '' })
   const [editingDogId, setEditingDogId] = useState<string | null>(null)
   const [editedDog, setEditedDog] = useState({ name: '', breed: '' })
+  const [filter, setFilter] = useState('')
 
-  // Define fetchDogs function
   const fetchDogs = async () => {
-    const { data, error } = await supabase
-      .from('dogs')
-      .select('id, name, breed')
+    let query = supabase.from('dogs').select('id, name, breed, temperament, age, health_status, status, notes, created_at')
+    if (filter) {
+      query = query.eq('temperament', filter)
+    }
+    const { data, error } = await query
     if (error) console.error('Error fetching dogs:', error)
-    else setDogs(data || [])
+    else setDogs(data as Dog[] || [])
   }
 
   useEffect(() => {
-    // Use the fetchDogs function here
     fetchDogs()
+  }, [filter])
 
-    // Set up real-time subscription
-    const subscription = supabase
-      .channel('dogs_channel')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'dogs' }, fetchDogs)
+  useEffect(() => {
+    const channel = supabase.channel('dogs_channel')
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'dogs' },
+        payload => {
+          setDogs(prevDogs => [...prevDogs, payload.new as Dog])
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'dogs' },
+        payload => {
+          setDogs(prevDogs =>
+            prevDogs.map(dog => (dog.id === payload.new.id ? payload.new as Dog : dog))
+          )
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: 'DELETE', schema: 'public', table: 'dogs' },
+        payload => {
+          setDogs(prevDogs => prevDogs.filter(dog => dog.id !== payload.old.id))
+        }
+      )
       .subscribe()
 
-    // Cleanup subscription on component unmount
     return () => {
-      subscription.unsubscribe()
+      channel.unsubscribe()
     }
-  }, [])
+  }, [filter])
 
-  // Function to add a new dog
-  const addDog = async (e: React.FormEvent) => {
-    e.preventDefault()
-    const { error } = await supabase
-      .from('dogs')
-      .insert([newDog])
-    if (error) console.error('Error adding dog:', error)
-    else {
-      setNewDog({ name: '', breed: '' }) // Reset form
-      // Fetch dogs again to update the list
-      const { data: updatedDogs } = await supabase.from('dogs').select('id, name, breed')
-      setDogs(updatedDogs || [])
-    }
-  }
-
-  // Add function to handle editing
   const startEdit = (dog: Dog) => {
     setEditingDogId(dog.id.toString())
     setEditedDog({ name: dog.name, breed: dog.breed })
@@ -78,7 +79,17 @@ export default function DogsPage() {
       console.error('Error updating dog:', error)
     } else {
       setEditingDogId(null)
-      // Now fetchDogs is accessible here
+      fetchDogs()
+    }
+  }
+
+  const addDog = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    const { error } = await supabase.from('dogs').insert(newDog)
+    if (error) {
+      console.error('Error adding dog:', error)
+    } else {
+      setNewDog({ name: '', breed: '' })
       fetchDogs()
     }
   }
@@ -86,8 +97,8 @@ export default function DogsPage() {
   return (
     <div className="container mx-auto p-4">
       <h1 className="text-2xl font-bold mb-4">Dogs</h1>
+      <Filter onFilter={setFilter} />
       
-      {/* Add new dog form */}
       <form onSubmit={addDog} className="mb-4">
         <input
           type="text"
@@ -96,6 +107,8 @@ export default function DogsPage() {
           onChange={(e) => setNewDog({ ...newDog, name: e.target.value })}
           className="mr-2 p-2 border rounded"
           required
+          id="dogName"
+          name="dogName"
         />
         <input
           type="text"
@@ -104,55 +117,51 @@ export default function DogsPage() {
           onChange={(e) => setNewDog({ ...newDog, breed: e.target.value })}
           className="mr-2 p-2 border rounded"
           required
+          id="dogBreed"
+          name="dogBreed"
         />
         <button type="submit" className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
           Add Dog
         </button>
       </form>
 
-      <table className="min-w-full bg-white border border-gray-300">
+      <table className="min-w-full bg-white">
         <thead>
-          <tr className="bg-gray-100">
-            <th className="py-2 px-4 border-b">Name</th>
-            <th className="py-2 px-4 border-b">Breed</th>
-            <th className="py-2 px-4 border-b">Action</th>
+          <tr>
+            <th className="py-2">Name</th>
+            <th className="py-2">Breed</th>
+            <th className="py-2">Temperament</th>
+            <th className="py-2">Actions</th>
           </tr>
         </thead>
         <tbody>
           {dogs.map((dog) => (
             <tr key={dog.id}>
-              <td className="py-2 px-4 border-b">
-                {editingDogId === dog.id ? (
-                  <input
-                    type="text"
-                    value={editedDog.name}
-                    onChange={(e) => setEditedDog({ ...editedDog, name: e.target.value })}
-                    className="p-1 border rounded"
-                    required
-                  />
-                ) : (
-                  dog.name
-                )}
-              </td>
-              <td className="py-2 px-4 border-b">
-                {editingDogId === dog.id ? (
-                  <input
-                    type="text"
-                    value={editedDog.breed}
-                    onChange={(e) => setEditedDog({ ...editedDog, breed: e.target.value })}
-                    className="p-1 border rounded"
-                    required
-                  />
-                ) : (
-                  dog.breed
-                )}
-              </td>
-              <td className="py-2 px-4 border-b">
+              <td className="border px-4 py-2">{dog.name}</td>
+              <td className="border px-4 py-2">{dog.breed}</td>
+              <td className="border px-4 py-2">{dog.temperament}</td>
+              <td className="border px-4 py-2">
                 {editingDogId === dog.id ? (
                   <>
+                    <input
+                      type="text"
+                      value={editedDog.name}
+                      onChange={(e) => setEditedDog({ ...editedDog, name: e.target.value })}
+                      className="mr-2 p-1 border rounded"
+                      id="editDogName"
+                      name="editDogName"
+                    />
+                    <input
+                      type="text"
+                      value={editedDog.breed}
+                      onChange={(e) => setEditedDog({ ...editedDog, breed: e.target.value })}
+                      className="mr-2 p-1 border rounded"
+                      id="editDogBreed"
+                      name="editDogBreed"
+                    />
                     <button
                       onClick={() => saveEdit(dog.id)}
-                      className="bg-green-500 hover:bg-green-700 text-white font-bold py-1 px-2 rounded mr-2"
+                      className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded mr-2"
                     >
                       Save
                     </button>

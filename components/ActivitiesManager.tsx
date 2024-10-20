@@ -41,13 +41,17 @@ const ActivitiesManager: React.FC<ActivitiesManagerProps> = ({ dogId, refreshDat
   const handleDeleteActivity = async (id: string) => {
     try {
       setError(null)
-      const response = await fetch(`/api/activities?id=${id}`, {
+      const response = await fetch(`/api/activities`, {
         method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id })
       })
+      
       if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || 'Failed to delete activity')
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.error || `Failed to delete activity. Status: ${response.status}`)
       }
+      
       deleteActivity(id)
       await refreshData()
     } catch (error) {

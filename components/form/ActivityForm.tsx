@@ -1,7 +1,5 @@
-import { useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@clerk/nextjs'
-import { Activity, Dog } from '@/types/Dog'
 import { useFormik } from 'formik'
 import * as Yup from 'yup'
 import { useToast } from '@/hooks/use-toast'
@@ -26,7 +24,7 @@ export default function ActivityForm({ dogId }: { dogId: string }) {
       temperamentNotes: Yup.string(),
     }),
     onSubmit: async (values, { resetForm }) => {
-      const { error } = await supabase.from('activities').insert({
+      const { data, error } = await supabase.from('activities').insert({
         dog_id: dogId,
         walker_id: userId,
         activity_type: values.activityType,
@@ -40,13 +38,21 @@ export default function ActivityForm({ dogId }: { dogId: string }) {
           description: 'There was a problem logging the activity.',
           variant: 'destructive',
         })
-      } else {
+      } else if (data) {
+        // Add the new activity to the local state
+        addActivity(data[0])
         toast({
           title: 'Success',
           description: 'Activity logged successfully.',
-          variant: 'default', // Changed from 'success' to 'default'
+          variant: 'default',
         })
         resetForm()
+      } else {
+        toast({
+          title: 'Warning',
+          description: 'Activity logged, but no data returned.',
+          variant: 'default',
+        })
       }
     },
   })

@@ -95,21 +95,29 @@ export async function PUT(request: Request) {
  * Removes an activity record from the database.
  */
 export async function DELETE(request: Request) {
-  const body = await request.json()
-  const { id } = body
+  try {
+    const body = await request.json()
+    const { id } = body
 
-  // Validate that id is provided
-  if (!id) {
-    return NextResponse.json({ error: 'id is required for deleting activity' }, { status: 400 })
+    if (!id) {
+      return NextResponse.json({ error: 'id is required for deleting activity' }, { status: 400 })
+    }
+
+    const { data, error } = await supabase
+      .from('activities')
+      .delete()
+      .eq('id', id)
+      .select()
+
+    if (error) throw error
+
+    if (data && data.length > 0) {
+      return NextResponse.json(data[0], { status: 200 })
+    } else {
+      return NextResponse.json({ error: 'Activity not found' }, { status: 404 })
+    }
+  } catch (error) {
+    console.error('Error deleting activity:', error)
+    return NextResponse.json({ error: 'An error occurred while deleting the activity' }, { status: 500 })
   }
-
-  // Delete activity from Supabase
-  const { data, error } = await supabase
-    .from('activities')
-    .delete()
-    .eq('id', id)
-
-  // Handle potential errors and return the deleted activity
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-  return NextResponse.json(data?.[0] ?? null, { status: 200 })
 }

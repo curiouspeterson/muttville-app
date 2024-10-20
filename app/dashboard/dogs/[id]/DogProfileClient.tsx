@@ -2,7 +2,7 @@
     
 import { Dog, Activity, Medication, HealthStatusUpdate, VeterinaryAppointment, ChronicCondition, EmergencyAlert } from '@/types/Dog'
 import { format } from 'date-fns'
-import { useStore } from '@/hooks/useStore'
+import { useStore, useCallback } from '@/hooks/useStore'
 import { useEffect } from 'react'
 import MedicationsManager from '@/components/MedicationsManager'
 import HealthUpdatesManager from '@/components/HealthUpdatesManager'
@@ -47,10 +47,10 @@ export default function DogProfileClient({
     setVeterinaryAppointments(vetAppointments)
     setChronicConditions(chronicConditions)
     setEmergencyAlerts(emergencyAlerts)
-  }, [activities, medications, healthUpdates, vetAppointments, chronicConditions, emergencyAlerts])
+  }, [activities, medications, healthUpdates, vetAppointments, chronicConditions, emergencyAlerts, setActivities, setMedications, setHealthStatusUpdates, setVeterinaryAppointments, setChronicConditions, setEmergencyAlerts])
 
   // Function to refresh all data
-  const refreshData = async () => {
+  const refreshData = useCallback(async () => {
     const response = await fetch(`/api/dogs/${dog.id}`)
     if (response.ok) {
       const data = await response.json()
@@ -61,13 +61,13 @@ export default function DogProfileClient({
       setChronicConditions(data.chronicConditions)
       setEmergencyAlerts(data.emergencyAlerts)
     }
-  }
+  }, [dog.id, setActivities, setMedications, setHealthStatusUpdates, setVeterinaryAppointments, setChronicConditions, setEmergencyAlerts])
 
   // Refresh data every 30 seconds
   useEffect(() => {
     const interval = setInterval(refreshData, 30000)
     return () => clearInterval(interval)
-  }, [dog.id])
+  }, [refreshData])
 
   const lastFeeding = activities
     .filter(a => a.activity_type === 'Feeding')

@@ -5,10 +5,11 @@ import { supabase } from '@/lib/supabase'
 import { Bar } from 'react-chartjs-2'
 import { ChartData } from 'chart.js';
 
-interface Walk {
-  dog_id: string;
-  count: number; // Changed from string to number
-}
+// Remove or comment out the unused interface
+// interface Walk {
+//   dog_id: string;
+//   count: number;
+// }
 
 export default function AnalyticsDashboard() {
   const [data, setData] = useState<ChartData<'bar', number[], string> | null>(null)

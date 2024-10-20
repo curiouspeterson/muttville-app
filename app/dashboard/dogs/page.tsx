@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
 import Link from 'next/link'
 import Filter from '@/components/Filter'
@@ -13,7 +13,7 @@ export default function DogsPage() {
   const [editedDog, setEditedDog] = useState({ name: '', breed: '' })
   const [filter, setFilter] = useState('')
 
-  const fetchDogs = async () => {
+  const fetchDogs = useCallback(async () => {
     let query = supabase.from('dogs').select('id, name, breed, temperament, age, health_status, status, notes, created_at')
     if (filter) {
       query = query.eq('temperament', filter)
@@ -21,11 +21,11 @@ export default function DogsPage() {
     const { data, error } = await query
     if (error) console.error('Error fetching dogs:', error)
     else setDogs(data as Dog[] || [])
-  }
+  }, [filter])
 
   useEffect(() => {
     fetchDogs()
-  }, [filter])
+  }, [fetchDogs])
 
   useEffect(() => {
     const channel = supabase.channel('dogs_channel')

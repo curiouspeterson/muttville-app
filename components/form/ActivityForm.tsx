@@ -11,7 +11,7 @@ import { Textarea } from '@/components/ui/textarea'
 
 export default function ActivityForm({ dogId }: { dogId: string }) {
   const { toast } = useToast()
-  const setActivities = useStore((state) => state.setActivities)
+  const { addActivity } = useStore()
   const { userId } = useAuth() // Retrieve the current user's ID
 
   const formik = useFormik({

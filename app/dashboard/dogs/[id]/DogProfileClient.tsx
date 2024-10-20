@@ -2,8 +2,8 @@
     
 import { Dog, Activity, Medication, HealthStatusUpdate, VeterinaryAppointment, ChronicCondition, EmergencyAlert } from '@/types/Dog'
 import { format } from 'date-fns'
-import { useStore, useCallback } from '@/hooks/useStore'
-import { useEffect } from 'react'
+import { useStore } from '@/hooks/useStore'
+import { useEffect, useCallback } from 'react'
 import MedicationsManager from '@/components/MedicationsManager'
 import HealthUpdatesManager from '@/components/HealthUpdatesManager'
 import VetAppointmentsManager from '@/components/VetAppointmentsManager'

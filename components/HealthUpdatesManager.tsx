@@ -3,29 +3,38 @@
 import { useState } from 'react'
 import { useStore } from '@/hooks/useStore'
 
+// Define props interface for HealthUpdatesManager component
 interface HealthUpdatesManagerProps {
   dogId: string
   refreshData: () => Promise<void>
 }
 
+// HealthUpdatesManager component for managing health updates of a dog
 const HealthUpdatesManager: React.FC<HealthUpdatesManagerProps> = ({ dogId, refreshData }) => {
+  // Use custom store hook to manage health status updates state
   const { healthStatusUpdates, addHealthStatusUpdate, deleteHealthStatusUpdate } = useStore()
+  // State for new health update input
   const [newHealthUpdate, setNewHealthUpdate] = useState({ symptoms: '', behavior_changes: '', concerns: '' })
+  // State for error handling
   const [error, setError] = useState<string | null>(null)
 
+  // Function to handle adding a new health update
   const handleAddHealthUpdate = async () => {
     try {
       setError(null)
+      // Send POST request to add new health update
       const response = await fetch('/api/health_updates', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ dog_id: dogId, ...newHealthUpdate }),
       })
+      // Check for unsuccessful response
       if (!response.ok) {
         const errorData = await response.json()
         throw new Error(errorData.error || 'Failed to add health update')
       }
       const data = await response.json()
+      // Update local state and reset form
       addHealthStatusUpdate(data)
       setNewHealthUpdate({ symptoms: '', behavior_changes: '', concerns: '' })
       await refreshData()
@@ -35,16 +44,20 @@ const HealthUpdatesManager: React.FC<HealthUpdatesManagerProps> = ({ dogId, refr
     }
   }
 
+  // Function to handle deleting a health update
   const handleDeleteHealthUpdate = async (id: string) => {
     try {
       setError(null)
+      // Send DELETE request to remove health update
       const response = await fetch(`/api/health_updates?id=${id}`, {
         method: 'DELETE',
       })
+      // Check for unsuccessful response
       if (!response.ok) {
         const errorData = await response.json()
         throw new Error(errorData.error || 'Failed to delete health update')
       }
+      // Update local state and refresh data
       deleteHealthStatusUpdate(id)
       await refreshData()
     } catch (error) {
@@ -57,6 +70,7 @@ const HealthUpdatesManager: React.FC<HealthUpdatesManagerProps> = ({ dogId, refr
     <div>
       <h3 className="text-lg font-semibold mb-2">Health Updates</h3>
       {error && <p className="text-red-500 mb-2">{error}</p>}
+      {/* Display list of health updates if available */}
       {healthStatusUpdates.length > 0 ? (
         <ul className="divide-y divide-gray-200">
           {healthStatusUpdates.map((update) => (
@@ -77,6 +91,7 @@ const HealthUpdatesManager: React.FC<HealthUpdatesManagerProps> = ({ dogId, refr
         <p>No health updates recorded for this dog.</p>
       )}
 
+      {/* Form for adding new health updates */}
       <div className="mt-4">
         <h4 className="text-md font-semibold mb-2">Add Health Update</h4>
         <input

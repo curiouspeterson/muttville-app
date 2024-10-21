@@ -1,14 +1,17 @@
 import create from 'zustand'
 import { Dog, Activity, Medication, HealthStatusUpdate, VeterinaryAppointment, ChronicCondition, EmergencyAlert } from '@/types/Dog'
 
+// Define the state shape for the store
 type State = {
+  // Core data
   dogs: Dog[]
   setDogs: (dogs: Dog[]) => void
   activities: Activity[]
   setActivities: (activities: Activity[]) => void
   filter: string
   setFilter: (filter: string) => void
-  // --- Added State for New Tables ---
+
+  // Health-related data
   medications: Medication[]
   setMedications: (medications: Medication[]) => void
   healthStatusUpdates: HealthStatusUpdate[]
@@ -19,8 +22,8 @@ type State = {
   setChronicConditions: (conditions: ChronicCondition[]) => void
   emergencyAlerts: EmergencyAlert[]
   setEmergencyAlerts: (alerts: EmergencyAlert[]) => void
-  // --- End of Added State ---
-  // --- Added CRUD Functions ---
+
+  // CRUD operations for health-related data
   addMedication: (medication: Medication) => void
   updateMedication: (updated: Medication) => void
   deleteMedication: (id: string) => void
@@ -41,20 +44,23 @@ type State = {
   updateEmergencyAlert: (updated: EmergencyAlert) => void
   deleteEmergencyAlert: (id: string) => void
 
+  // CRUD operations for activities
   addActivity: (activity: Activity) => void
   updateActivity: (updated: Activity) => void
   deleteActivity: (id: string) => void
-  // --- End of CRUD Functions ---
 }
 
+// Create the store using Zustand
 export const useStore = create<State>((set) => ({
+  // Initialize core data
   dogs: [],
   setDogs: (dogs) => set({ dogs }),
   activities: [],
   setActivities: (activities) => set({ activities }),
   filter: '',
   setFilter: (filter) => set({ filter }),
-  // --- Added State Setters ---
+
+  // Initialize health-related data
   medications: [],
   setMedications: (medications) => set({ medications }),
   healthStatusUpdates: [],
@@ -65,8 +71,8 @@ export const useStore = create<State>((set) => ({
   setChronicConditions: (conditions) => set({ chronicConditions: conditions }),
   emergencyAlerts: [],
   setEmergencyAlerts: (alerts) => set({ emergencyAlerts: alerts }),
-  // --- End of Added State Setters ---
-  // --- Added CRUD Functions ---
+
+  // CRUD operations for health-related data
   addMedication: (medication: Medication) => set((state) => ({ medications: [...state.medications, medication] })),
   updateMedication: (updated: Medication) => set((state) => ({
     medications: state.medications.map(med => med.id === updated.id ? updated : med)
@@ -107,6 +113,7 @@ export const useStore = create<State>((set) => ({
     emergencyAlerts: state.emergencyAlerts.filter(al => al.id !== id)
   })),
 
+  // CRUD operations for activities
   addActivity: (activity: Activity) => set((state) => ({ activities: [...state.activities, activity] })),
   updateActivity: (updated: Activity) => set((state) => ({
     activities: state.activities.map(act => act.id === updated.id ? updated : act)
@@ -114,5 +121,4 @@ export const useStore = create<State>((set) => ({
   deleteActivity: (id: string) => set((state) => ({
     activities: state.activities.filter(act => act.id !== id)
   })),
-  // --- End of CRUD Functions ---
 }))

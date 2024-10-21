@@ -4,15 +4,28 @@ import { useState } from 'react'
 import { useStore } from '@/hooks/useStore'
 import { format } from 'date-fns'
 
+// Define props interface for VetAppointmentsManager component
 interface VetAppointmentsManagerProps {
   dogId: string
   refreshData: () => Promise<void>
 }
 
+/**
+ * VetAppointmentsManager component for managing veterinary appointments of a dog
+ * @param {Object} props - Component props
+ * @param {string} props.dogId - ID of the dog
+ * @param {Function} props.refreshData - Function to refresh data after changes
+ */
 const VetAppointmentsManager: React.FC<VetAppointmentsManagerProps> = ({ dogId, refreshData }) => {
+  // Use custom store hook to manage veterinary appointments state
   const { veterinaryAppointments, addVeterinaryAppointment, deleteVeterinaryAppointment } = useStore()
+  // State for new appointment input
   const [newAppointment, setNewAppointment] = useState({ appointment_date: '', vet_recommendations: '', follow_up_instructions: '' })
 
+  /**
+   * Function to handle adding a new veterinary appointment
+   * Sends a POST request to the API and updates local state on success
+   */
   const handleAddAppointment = async () => {
     const response = await fetch('/api/veterinary_appointments', {
       method: 'POST',
@@ -29,6 +42,11 @@ const VetAppointmentsManager: React.FC<VetAppointmentsManagerProps> = ({ dogId, 
     }
   }
 
+  /**
+   * Function to handle deleting a veterinary appointment
+   * Sends a DELETE request to the API and updates local state on success
+   * @param {string} id - ID of the appointment to delete
+   */
   const handleDeleteAppointment = async (id: string) => {
     const response = await fetch(`/api/veterinary_appointments?id=${id}`, {
       method: 'DELETE',
@@ -44,6 +62,7 @@ const VetAppointmentsManager: React.FC<VetAppointmentsManagerProps> = ({ dogId, 
   return (
     <div>
       <h3 className="text-lg font-semibold mb-2">Veterinary Appointments</h3>
+      {/* Display list of veterinary appointments if available */}
       {veterinaryAppointments.length > 0 ? (
         <ul className="divide-y divide-gray-200">
           {veterinaryAppointments.map((appointment) => (
@@ -64,6 +83,7 @@ const VetAppointmentsManager: React.FC<VetAppointmentsManagerProps> = ({ dogId, 
         <p>No veterinary appointments recorded for this dog.</p>
       )}
 
+      {/* Form for adding new veterinary appointments */}
       <div className="mt-4">
         <h4 className="text-md font-semibold mb-2">Add Veterinary Appointment</h4>
         <input

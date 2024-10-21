@@ -38,7 +38,10 @@ muttville-app/
 │   ├── fonts/
 │   ├── globals.css
 │   ├── layout.tsx
-│   └── page.tsx
+│   ├── page.tsx
+│   └── store/
+│       ├── index.ts
+│       └── store.ts
 ├── components/
 │   ├── form/
 │   │   └── ActivityForm.tsx
@@ -57,9 +60,11 @@ muttville-app/
 │   ├── ActivityLog.tsx
 │   ├── AnalyticsDashboard.tsx
 │   ├── CareCalendar.tsx
+│   ├── HealthUpdatesManager.tsx
 │   └── Header.tsx
 ├── hooks/
-│   └── use-toast.ts
+│   ├── use-toast.ts
+│   └── useStore.ts
 ├── lib/
 │   ├── clerk.ts
 │   ├── supabase.ts
@@ -283,4 +288,50 @@ muttville-app/
 - **Error Handling**: Basic error logging is implemented, especially in data fetching functions.
 - **Deployment**: Configurations for deployment are set in `next.config.mjs` and the project is ready to be deployed on platforms like Vercel.
 
+## TODO
+1. **Centralize TypeScript Interfaces:**
+   - Ensure all interfaces are defined in a single `types` directory to avoid duplication and maintain consistency.
 
+2. **Implement Comprehensive API Routes:**
+   - Add `PUT` and `DELETE` handlers for `activities` and `dogs` to support full CRUD operations.
+
+3. **Enhance Error Handling:**
+   - Integrate user-friendly error notifications using the existing `useToast` hook or similar mechanisms.
+
+4. **Optimize Real-Time Subscriptions:**
+   - Limit real-time subscriptions to specific events (`INSERT`, `UPDATE`, `DELETE`) to improve performance.
+
+5. **Introduce Unit and Integration Testing:**
+   - Develop tests for critical components and API routes to ensure reliability and catch issues early.
+
+6. **Improve Form Validation:**
+   - Integrate more robust validation libraries (e.g., Yup, Zod) to ensure data integrity across all forms.
+
+7. **Optimize State Management:**
+   - Leverage Zustand more extensively for managing complex and real-time state changes.
+
+8. **Implement Optimistic UI Updates:**
+   - Reduce unnecessary data fetching by updating the local state optimistically upon successful mutations.
+
+9. **Expand UI Components:**
+   - Develop additional reusable UI components to streamline development and maintain design consistency.
+
+10. **Documentation Enhancements:**
+    - Update `README.md` with comprehensive setup, usage instructions, and contribution guidelines.
+
+11. **Accessibility Improvements:**
+    - Ensure all components meet accessibility standards to provide an inclusive user experience.
+
+12. **Performance Optimization:**
+    - Analyze and optimize the application's performance, focusing on load times and responsiveness.
+
+13. **Security Enhancements:**
+    - Implement additional security measures, such as input sanitization and rate limiting, to protect against common vulnerabilities.
+
+14. **Deployment Pipeline:**
+    - Set up continuous integration and deployment (CI/CD) pipelines to automate testing and deployments.
+
+15. **User Feedback Features:**
+    - Incorporate features that allow users to provide feedback or report issues directly within the application.
+
+Feel free to reach out for further assistance on implementing these recommendations or addressing any specific issues.

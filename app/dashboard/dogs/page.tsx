@@ -6,15 +6,19 @@ import Link from 'next/link'
 import Filter from '@/components/Filter'
 import { Dog } from '@/types/Dog'
 
+// Main component for displaying and managing dogs
 export default function DogsPage() {
+  // State variables for managing dogs, new dog input, editing, and filtering
   const [dogs, setDogs] = useState<Dog[]>([])
   const [newDog, setNewDog] = useState({ name: '', breed: '' })
   const [editingDogId, setEditingDogId] = useState<string | null>(null)
   const [editedDog, setEditedDog] = useState({ name: '', breed: '' })
   const [filter, setFilter] = useState('')
 
+  // Function to fetch dogs from the database
   const fetchDogs = useCallback(async () => {
     let query = supabase.from('dogs').select('id, name, breed, temperament, age, health_status, status, notes, created_at')
+    // Apply filter if set
     if (filter) {
       query = query.eq('temperament', filter)
     }
@@ -23,10 +27,12 @@ export default function DogsPage() {
     else setDogs(data as Dog[] || [])
   }, [filter])
 
+  // Fetch dogs on component mount and when filter changes
   useEffect(() => {
     fetchDogs()
   }, [fetchDogs])
 
+  // Set up real-time subscription to dog changes
   useEffect(() => {
     const channel = supabase.channel('dogs_channel')
       .on(
@@ -54,21 +60,25 @@ export default function DogsPage() {
       )
       .subscribe()
 
+    // Cleanup function to unsubscribe from the channel
     return () => {
       channel.unsubscribe()
     }
   }, [filter])
 
+  // Function to start editing a dog
   const startEdit = (dog: Dog) => {
     setEditingDogId(dog.id.toString())
     setEditedDog({ name: dog.name, breed: dog.breed })
   }
 
+  // Function to cancel editing
   const cancelEdit = () => {
     setEditingDogId(null)
     setEditedDog({ name: '', breed: '' })
   }
 
+  // Function to save edited dog details
   const saveEdit = async (dogId: string) => {
     const { error } = await supabase
       .from('dogs')
@@ -83,6 +93,7 @@ export default function DogsPage() {
     }
   }
 
+  // Function to add a new dog
   const addDog = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     const { error } = await supabase.from('dogs').insert(newDog)
@@ -99,6 +110,7 @@ export default function DogsPage() {
       <h1 className="text-2xl font-bold mb-4">Dogs</h1>
       <Filter onFilter={setFilter} />
       
+      {/* Form for adding a new dog */}
       <form onSubmit={addDog} className="mb-4">
         <input
           type="text"
@@ -125,6 +137,7 @@ export default function DogsPage() {
         </button>
       </form>
 
+      {/* Table to display dogs */}
       <table className="min-w-full bg-white">
         <thead>
           <tr>
@@ -142,6 +155,7 @@ export default function DogsPage() {
               <td className="border px-4 py-2">{dog.temperament}</td>
               <td className="border px-4 py-2">
                 {editingDogId === dog.id ? (
+                  // Editing mode
                   <>
                     <input
                       type="text"
@@ -173,6 +187,7 @@ export default function DogsPage() {
                     </button>
                   </>
                 ) : (
+                  // View mode
                   <>
                     <Link href={`/dashboard/dogs/${dog.id}`}>
                       <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded mr-2">
